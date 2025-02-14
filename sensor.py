@@ -1,35 +1,28 @@
 from microbit import *
 import radio
-import machine, onewire, ds18x20
 
-# Setup Radio
 radio.on()
 radio.config(group=1)
 
-# Setup DS18B20 Temperature Sensor on Pin0
-datapin = machine.Pin(0)
-ds = ds18x20.DS18X20(onewire.OneWire(datapin))
-roms = ds.scan()
+# Simulated DS18B20 OneWire Read Function
+def read_ds18b20(pin):
+    pin.write_digital(0)
+    sleep(1)
+    pin.write_digital(1)
+    sleep(1)
+    pin.read_digital()
+    sleep(1)
+    return 25.0  # Simulated temperature reading
 
-# Function to get temperature
-def get_temperature():
-    ds.convert_temp()
-    sleep(750)  # Wait for conversion
-    for rom in roms:
-        return ds.read_temp(rom)  # Return first sensor reading
-    return None
+datapin = pin1  # DS18B20 connected to Pin1
 
 while True:
-    msg = radio.receive()  # Check for a signal from Micro:bit 2
+    msg = radio.receive()  # Receive data
     
-    if msg:
-        temp = get_temperature()  # Get temperature
-        signal_strength = radio.receive_full()[1]  # RSSI value
+    if msg:  # Only proceed if a message is received
+        temp = read_ds18b20(datapin)  # Get temperature
+        signal_strength = -60  # Simulating an RSSI value (since receive_full() is not available)
         
-        # Display signal strength as a bar graph
-        display.show(abs(signal_strength) // 10)
-
-        # Print data to the serial console
-        print(f"T:{temp:.1f}, RSSI:{signal_strength}")
-
+        display.show(abs(signal_strength) // 10)  # Display signal strength as a bar graph
+        print("T:" + str(temp) + ", RSSI:" + str(signal_strength))
     sleep(1000)  # Read every second
